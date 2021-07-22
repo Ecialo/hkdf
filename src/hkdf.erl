@@ -34,11 +34,11 @@ extract(Hash_algorithm, IKM) ->
 	      IKM :: iodata()) 
 	     -> PRK :: binary(). 
 extract(Hash_algorithm, <<"">>, IKM) -> 
-    crypto:hmac(Hash_algorithm, 
+    hmac(Hash_algorithm, 
 		<<0:(hash_length(Hash_algorithm))>>, 
 		IKM);
 extract(Hash_algorithm, Salt, IKM) -> 
-    crypto:hmac(Hash_algorithm, Salt, IKM).
+    hmac(Hash_algorithm, Salt, IKM).
 
 -spec expand(Hash_algorithm :: hash_algorithms(), 
 	     PRK :: iodata(), 
@@ -73,7 +73,7 @@ expand_(_Hash_algorithm, _PRK, _Info, I, N, _Prev, Acc)
   when I > N ->
     Acc;
 expand_(Hash_algorithm, PRK, Info, I, N, Prev, Acc) ->
-    Ti = crypto:hmac(Hash_algorithm, 
+    Ti = hmac(Hash_algorithm, 
 		     PRK, 
 		     <<Prev/binary, Info/binary, I:8>>),
     expand_(Hash_algorithm, PRK, Info, I + 1, N, Ti, 
@@ -119,6 +119,9 @@ derive_secrets(Hash_algorithm, IKM, Info, L) ->
 derive_secrets(Hash_algorithm, IKM, Info, Salt, L) ->
     PRK = extract(Hash_algorithm, Salt, IKM),
     expand(Hash_algorithm, PRK, Info, L).
+
+hmac(Algo, Key, Data) ->
+    crypto:mac(hmac, Algo, Key, Data).
 
 
 -ifdef(TEST).
